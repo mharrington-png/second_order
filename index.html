@@ -6,10 +6,10 @@
 <main>
 <h1>Interpreting <span class="math">f<sub>xy</sub></span> as a 'twist.'</h1>
 <div class="function-row"><label for="fn">Choose a surface:</label><select id="fn" aria-label="Choose a surface">
-<option value="neg">f(x,y) = −xy</option><option value="pos">f(x,y) = xy</option><option value="bowl">f(x,y) = ½(x² + y²)</option><option value="vary">f(x,y) = ½x²y</option><option value="wave">f(x,y) = sin(x) sin(y)</option></select></div><p id="formula" class="math"></p>
+<option value="neg">f(x,y) = −xy</option><option value="pos">f(x,y) = xy</option><option value="bowl">f(x,y) = ½(x² + y²)</option><option value="vary">f(x,y) = ½x²y</option><option value="wave">f(x,y) = sin(x) sin(y)</option><option value="book">f(x,y) = sin(x)e^(−y) — textbook</option></select></div><p id="formula" class="math"></p>
 <p>Slide <b>y</b> while holding <b>x</b> fixed. Watch the orange tangent line tilt as its center follows the blue trace.</p>
 <div class="controls">
-<label class="slider"><span class="math">x</span> = <output id="xo">0.00</output><input id="xs" aria-label="x coordinate" type="range" min="-1.5" max="1.5" step="0.01" value="0"></label>
+<label class="slider"><span class="math">x</span> = <output id="xo">0.00</output><input id="xs" aria-label="x coordinate" type="range" min="-2" max="2" step="0.01" value="0"></label>
 <label class="slider"><span class="math">y</span> = <output id="yo">−1.00</output><input id="ys" aria-label="y coordinate" type="range" min="-1.5" max="1.5" step="0.01" value="-1"></label>
 <button id="play">▶ Sweep y upward</button><button id="reset">Reset</button>
 </div>
@@ -19,12 +19,13 @@
 </div>
 <div class="options"><label><input id="ghosts" type="checkbox"> Compare lines at y = −1, 0, 1</label><label><input id="surface" type="checkbox" checked> Show surface</label><label><input id="reveal" type="checkbox"> Reveal derivatives</label></div>
 <div class="explain" id="message">As y increases, does the x-direction slope increase or decrease?</div>
-<details><summary>Things to explore</summary><p>Begin with −xy and x = 0. Sweep y upward, then compare the three reference tangent lines. Hold y fixed and move x: does the slope change?</p><p>Switch to xy. What changes about the way the tangent tilts? Try the bowl ½(x² + y²): the traces curve, but does the x-direction slope change when you move only y?</p><p>For ½x²y, compare a sweep at a negative x, at x = 0, and at a positive x. For sin(x) sin(y), explore how both the position and the value of y affect the rate of change of slope.</p><p>The orange segment is tangent in the x direction. The blue curve is the path followed when x is held fixed. For ±xy, the tangent lies entirely on the surface because each coordinate trace is straight. For curved traces, the tangent generally leaves the surface.</p><p><span class="math">f<sub>xy</sub> = (f<sub>x</sub>)<sub>y</sub></span> measures the rate of change of the x-direction slope with respect to y, with x held fixed. It is not an angular rotation rate. This interpretation of twist depends on the coordinate directions.</p></details>
+<details><summary>Things to explore</summary><p>Begin with −xy and x = 0. Sweep y upward, then compare the three reference tangent lines. Hold y fixed and move x: does the slope change?</p><p>Switch to xy. What changes about the way the tangent tilts? Try the bowl ½(x² + y²): the traces curve, but does the x-direction slope change when you move only y?</p><p>For ½x²y, compare a sweep at a negative x, at x = 0, and at a positive x. For sin(x) sin(y), explore how both the position and the value of y affect the rate of change of slope.</p><p>For the textbook example sin(x)e<sup>−y</sup>, set x = 1.75 and sweep y upward. Then compare x = 0: the sign of the mixed partial changes between these traces. The side view uses a wider vertical range for this surface.</p><p>The orange segment is tangent in the x direction. The blue curve is the path followed when x is held fixed. For ±xy, the tangent lies entirely on the surface because each coordinate trace is straight. For curved traces, the tangent generally leaves the surface.</p><p><span class="math">f<sub>xy</sub> = (f<sub>x</sub>)<sub>y</sub></span> measures the rate of change of the x-direction slope with respect to y, with x held fixed. It is not an angular rotation rate. This interpretation of twist depends on the coordinate directions.</p></details>
 </main>
 <script>
 (()=>{
 const $=id=>document.getElementById(id),c=$('scene'),ctx=c.getContext('2d');
 const models={
+ book:{f:(x,y)=>Math.sin(x)*Math.exp(-y),fx:(x,y)=>Math.cos(x)*Math.exp(-y),xx:(x,y)=>-Math.sin(x)*Math.exp(-y),xy:(x,y)=>-Math.cos(x)*Math.exp(-y),formula:'sin(x)e<sup>−y</sup>',dx:'cos(x)e<sup>−y</sup>',dxx:'−sin(x)e<sup>−y</sup>',dxy:'−cos(x)e<sup>−y</sup>',book:true},
  neg:{f:(x,y)=>-x*y,fx:(x,y)=>-y,xx:()=>0,xy:()=>-1,formula:'−xy',dx:'−y',dxx:'0',dxy:'−1',straight:true},
  pos:{f:(x,y)=>x*y,fx:(x,y)=>y,xx:()=>0,xy:()=>1,formula:'xy',dx:'y',dxx:'0',dxy:'1',straight:true},
  bowl:{f:(x,y)=>(x*x+y*y)/2,fx:(x,y)=>x,xx:()=>1,xy:()=>0,formula:'½(x<sup>2</sup> + y<sup>2</sup>)',dx:'x',dxx:'1',dxy:'0'},
@@ -33,21 +34,21 @@ const models={
 };
 let model=models.neg,a=0,b=-1,az=.70,el=.48,playing=false,startTime=null,startY=-1,w=0,h=0;
 const fmt=v=>(Math.abs(v)<.005?0:v).toFixed(2).replace('-','−');
-function project([x,y,z]){let u=x*Math.cos(az)-y*Math.sin(az),v=x*Math.sin(az)+y*Math.cos(az),s=Math.min(w/7.1,h/6.2);return[w/2+s*u,h/2+12+s*(v*Math.sin(el)-z*Math.cos(el)),v*Math.cos(el)+z*Math.sin(el)];}
+function project([x,y,z]){let u=x*Math.cos(az)-y*Math.sin(az),v=x*Math.sin(az)+y*Math.cos(az),s=Math.min(w/7.1,h/(model.book?10:6.2));return[w/2+s*u,h/2+12+s*(v*Math.sin(el)-z*Math.cos(el)),v*Math.cos(el)+z*Math.sin(el)];}
 function path(points,color,width=1,dash=[]){ctx.beginPath();points.forEach((p,i)=>{let q=project(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}
 function label(p,t){let q=project(p);ctx.fillStyle='#24374e';ctx.font='italic 17px Georgia';ctx.fillText(t,q[0]+5,q[1]-6);}
 function tangent(y){const s=model.fx(a,y),z=model.f(a,y);let lo=model.straight?-2:a-.65,hi=model.straight?2:a+.65;return[[lo,y,z+s*(lo-a)],[hi,y,z+s*(hi-a)]];}
 function draw(){
  const r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;w=r.width;h=r.height;
  if(c.width!==Math.round(w*d)||c.height!==Math.round(h*d)){c.width=Math.round(w*d);c.height=Math.round(h*d);}ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);
- if($('surface').checked){let tiles=[],n=28;for(let i=0;i<n;i++)for(let j=0;j<n;j++){let x=-2+4*i/n,y=-2+4*j/n,s=4/n;let pts=[[x,y,model.f(x,y)],[x+s,y,model.f(x+s,y)],[x+s,y+s,model.f(x+s,y+s)],[x,y+s,model.f(x,y+s)]];tiles.push({pts,depth:project([x+s/2,y+s/2,model.f(x+s/2,y+s/2)])[2]});}tiles.sort((u,v)=>v.depth-u.depth);for(const tile of tiles){ctx.beginPath();tile.pts.forEach((p,i)=>{let q=project(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});ctx.closePath();ctx.fillStyle='rgba(91,157,173,.18)';ctx.fill();ctx.strokeStyle='rgba(61,113,133,.22)';ctx.lineWidth=.6;ctx.stroke();}}
+ if($('surface').checked){let tiles=[],n=28;for(let i=0;i<n;i++)for(let j=0;j<n;j++){let x=-2+4*i/n,y=model.book?(-1.5+3*j/n):(-2+4*j/n),s=4/n,sy=model.book?3/n:s;let pts=[[x,y,model.f(x,y)],[x+s,y,model.f(x+s,y)],[x+s,y+sy,model.f(x+s,y+sy)],[x,y+sy,model.f(x,y+sy)]];tiles.push({pts,depth:project([x+s/2,y+sy/2,model.f(x+s/2,y+sy/2)])[2]});}tiles.sort((u,v)=>v.depth-u.depth);for(const tile of tiles){ctx.beginPath();tile.pts.forEach((p,i)=>{let q=project(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});ctx.closePath();ctx.fillStyle='rgba(91,157,173,.18)';ctx.fill();ctx.strokeStyle='rgba(61,113,133,.22)';ctx.lineWidth=.6;ctx.stroke();}}
  path([[-2.3,0,0],[2.3,0,0]],'#718096');path([[0,-2.3,0],[0,2.3,0]],'#718096');path([[0,0,-3],[0,0,3]],'#718096');label([2.3,0,0],'+x');label([0,2.3,0],'+y');label([0,0,3],'+z');
  if($('ghosts').checked)for(const y of [-1,0,1])path(tangent(y),'#8d5949',2,[5,5]);
- path(Array.from({length:81},(_,i)=>{let y=-2+i/20;return[a,y,model.f(a,y)];}),'#176ba0',3);
+ path(Array.from({length:81},(_,i)=>{let y=model.book?(-1.5+3*i/80):(-2+i/20);return[a,y,model.f(a,y)];}),'#176ba0',3);
  path(tangent(b),'#c4421a',5);
  let p=project([a,b,model.f(a,b)]);ctx.beginPath();ctx.arc(p[0],p[1],6,0,Math.PI*2);ctx.fillStyle='#17283f';ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();side();
 }
-function side(){const X=x=>160+55*x,Z=z=>160-55*z;let s='<defs><clipPath id="frame"><rect x="26" y="26" width="268" height="268"/></clipPath></defs><g stroke="#dce3ec" stroke-width="1">';for(let k=-2;k<=2;k++)s+=`<path d="M${X(k)} 28V292 M28 ${Z(k)}H292"/>`;s+='</g><g stroke="#738095"><path d="M28 160H292 M160 292V28"/></g><g fill="#24374e" font-family="Georgia" font-style="italic" font-size="16"><text x="295" y="155">x</text><text x="166" y="25">z</text></g><g fill="#24374e" font-family="Georgia" font-size="14"><text x="166" y="177">0</text><text x="211" y="177">1</text><text x="166" y="109">1</text></g><g clip-path="url(#frame)">';
+function side(){const X=x=>160+55*x,Z=z=>160-(model.book?25:55)*z;let s='<defs><clipPath id="frame"><rect x="26" y="26" width="268" height="268"/></clipPath></defs><g stroke="#dce3ec" stroke-width="1">';for(let k=-2;k<=2;k++)s+=`<path d="M${X(k)} 28V292 M28 ${Z(k)}H292"/>`;s+='</g><g stroke="#738095"><path d="M28 160H292 M160 292V28"/></g><g fill="#24374e" font-family="Georgia" font-style="italic" font-size="16"><text x="295" y="155">x</text><text x="166" y="25">z</text></g><g fill="#24374e" font-family="Georgia" font-size="14"><text x="166" y="177">0</text><text x="211" y="177">1</text><text x="166" y="'+(Z(1)+4)+'">1</text></g><g clip-path="url(#frame)">';
  const curve=Array.from({length:101},(_,i)=>{let x=-2.4+i*.048;return`${i?'L':'M'}${X(x)} ${Z(model.f(x,b))}`;}).join(' ');s+=`<path d="${curve}" fill="none" stroke="#839daa" stroke-width="2"/>`;
  function line(y,color,dash=''){const [p,q]=tangent(y);return`<line x1="${X(p[0])}" y1="${Z(p[2])}" x2="${X(q[0])}" y2="${Z(q[2])}" stroke="${color}" stroke-width="3" ${dash}/>`;}
  if($('ghosts').checked)for(const y of [-1,0,1])s+=line(y,'#ad8b80','stroke-dasharray="5 5"');s+=line(b,'#c4421a');s+=`<circle cx="${X(a)}" cy="${Z(model.f(a,b))}" r="5" fill="#17283f"/></g>`;$('side').innerHTML=s;
